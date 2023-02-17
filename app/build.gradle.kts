@@ -15,12 +15,15 @@
  */
 
 plugins {
+    id("jacoco")
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kapt)
     alias(libs.plugins.hilt)
 }
-
+jacoco {
+    toolVersion = "0.8.5"
+}
 android {
     compileSdk = libs.versions.compileSdk.get().toInt()
 
@@ -129,7 +132,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.timber)
     implementation(libs.androidx.test.espresso.idling.resources)
-
+    implementation("com.github.farhanarnob:FileCreateBroadcastReceiver:1.8")
     // Architecture Components
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)

@@ -16,17 +16,28 @@
 
 package com.example.android.architecture.blueprints.todoapp
 
+import android.content.IntentFilter
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import com.farhanrahman.file_create_on_broadcast.service.CustomBroadcastReceiverName
+import com.farhanrahman.file_create_on_broadcast.service.FileBroadcastReceiver
+import com.farhanrahman.file_create_on_broadcast.util.FileManager
+import com.farhanrahman.file_create_on_broadcast.util.PermissionUtil
+import com.farhanrahman.file_create_on_broadcast.util.PermissionUtil.checkPermissionResult
+import com.farhanrahman.file_create_on_broadcast.util.PermissionUtil.permissionToWriteAccepted
 import com.google.accompanist.appcompattheme.AppCompatTheme
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+
 
 /**
  * Main activity for the todoapp
  */
 @AndroidEntryPoint
 class TasksActivity : ComponentActivity() {
+
+    private val fileBroadcastReceiver = FileBroadcastReceiver()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,5 +46,36 @@ class TasksActivity : ComponentActivity() {
                 TodoNavGraph()
             }
         }
+//        Check permission
+        PermissionUtil.requestPermission(this)
+        if(PermissionUtil.permissions.isEmpty()){
+            FileManager.writeFile(this, FileManager.createFile(this))
+        }
+
+        registerReceiver(fileBroadcastReceiver, IntentFilter(CustomBroadcastReceiverName.com_context_FINISH_TESTING.stringName))
+    }
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if(requestCode != RESULT_CANCELED) {
+            PermissionUtil.checkPermissionResult(this, requestCode, permissions, grantResults)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if( PermissionUtil.permissionToWriteAccepted){
+            FileManager.createFile(this)?.let {
+                FileManager.writeFile(this,it)
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(fileBroadcastReceiver)
     }
 }
